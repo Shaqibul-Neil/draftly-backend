@@ -1,0 +1,10 @@
+enum TRole{
+    AUTHOR
+    READER
+    ADMIN
+}
+
+enum TStatus{
+    ACTIVE
+    SUSPENDED
+}
