@@ -6,7 +6,7 @@ import { AppError } from "./appError";
 /**
  * Token Verification
  */
-export const verifyToken = (token: string, type: "access" | "refresh") => {
+const verifyToken = (token: string, type: "access" | "refresh") => {
   const secret =
     type === "access" ? config.jwt.access.secret : config.jwt.refresh.secret;
   try {
@@ -39,7 +39,8 @@ export const verifyToken = (token: string, type: "access" | "refresh") => {
 /**
  * Generates both access and refresh tokens.
  */
-export const signToken = (payload: IJwtPayload) => {
+
+const signToken = (payload: IJwtPayload) => {
   const accessToken = jwt.sign(payload, config.jwt.access.secret, {
     expiresIn: config.jwt.access.expires_in,
   });
@@ -53,3 +54,5 @@ export const signToken = (payload: IJwtPayload) => {
     refreshToken,
   };
 };
+
+export const jwtToken = { verifyToken, signToken };

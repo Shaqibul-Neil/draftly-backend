@@ -14,12 +14,7 @@ export const globalErrorHandler = (
 ) => {
   let statusCode = 500;
   let message = "Something went wrong";
-  let errorSources = [
-    {
-      path: "system",
-      message: "Something went wrong",
-    },
-  ];
+  let errorSources: { path: string; message: string }[] = [];
 
   // Handling Zod Errors
   if (err instanceof ZodError) {
@@ -27,7 +22,7 @@ export const globalErrorHandler = (
     message = "Validation Error";
 
     errorSources = err.issues.map((issue) => ({
-      path: String(issue.path.at(-1)),
+      path: String(issue.path.join(".")),
       message: issue.message,
     }));
   }
@@ -35,9 +30,20 @@ export const globalErrorHandler = (
   else if (err instanceof AppError) {
     statusCode = err.statusCode;
     message = err.message;
-    errorSources = [{ path: "system", message: err.details }];
+    errorSources = [
+      {
+        path: "",
+        message: err.details || err.message,
+      },
+    ];
   } else if (err instanceof Error) {
     message = err.message;
+    errorSources = [
+      {
+        path: "",
+        message: err.message,
+      },
+    ];
   }
 
   return res.status(statusCode).json({

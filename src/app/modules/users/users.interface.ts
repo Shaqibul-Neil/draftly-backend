@@ -1,6 +1,6 @@
 import type { TRole, TStatus } from "../../../../generated/prisma/enums";
 
-export interface ISavedUserResponse {
+export interface ISafeUser {
   id: string;
   userName: string;
   email: string;
@@ -26,4 +26,11 @@ export interface ISavedProfile {
   postCount: number;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface IJwtPayload {
+  id: string;
+  email: string;
+  role: TRole;
+  status: TStatus;
 }

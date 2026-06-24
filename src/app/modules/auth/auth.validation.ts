@@ -33,7 +33,7 @@ export const registerValidationSchema = z.object({
 
 export const loginValidationSchema = z.object({
   body: z.object({
-    email: z.email("Invalid email"),
+    identifier: z.string().min(1, "Email or username is required"),
     password: z.string().min(6, "Password must be at least 6 characters"),
   }),
 });
@@ -41,3 +41,4 @@ export const loginValidationSchema = z.object({
 export type TRegisterUserPayload = z.infer<
   typeof registerValidationSchema
 >["body"];
+export type TLoginUserPayload = z.infer<typeof loginValidationSchema>["body"];
