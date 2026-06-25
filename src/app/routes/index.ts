@@ -1,19 +1,18 @@
-import express from "express";
-import { authRoutes } from "../modules/auth/auth.route";
-import { userRoutes } from "../modules/users/users.route";
+import { Router } from "express";
+import type { TApiVersion } from "./route.types";
+import { buildRouter } from "./registerRoutes";
+import { routeRegistry } from "./route.registry";
 
-const router = express.Router();
-const moduleRoutes = [
-  {
-    path: "/auth",
-    route: authRoutes,
-  },
-  {
-    path: "/users",
-    route: userRoutes,
-  },
-];
+const DEFAULT_VERSION: TApiVersion = "v1";
 
-moduleRoutes.forEach((route) => router.use(route.path, route.route));
+const router = Router();
+
+routeRegistry.forEach(({ basePath, routes, version = DEFAULT_VERSION }) =>
+  router.use(`/${version}${basePath}`, buildRouter(routes)),
+);
+
+export const mountedPaths = routeRegistry.map(
+  ({ basePath, version = DEFAULT_VERSION }) => `/api/${version}${basePath}`,
+);
 
 export default router;

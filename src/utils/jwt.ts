@@ -1,4 +1,5 @@
 import jwt, { type JwtPayload } from "jsonwebtoken";
+import httpStatus from "http-status";
 import config from "../config";
 import type { IJwtPayload } from "../app/modules/users/users.interface";
 import { AppError } from "./appError";
@@ -16,21 +17,21 @@ const verifyToken = (token: string, type: "access" | "refresh") => {
     if (error instanceof jwt.TokenExpiredError) {
       throw new AppError(
         "Unauthorized",
-        401,
+        httpStatus.UNAUTHORIZED,
         "Your access token has expired. Please refresh your session.",
       );
     }
     if (error instanceof jwt.JsonWebTokenError) {
       throw new AppError(
         "Unauthorized",
-        401,
+        httpStatus.UNAUTHORIZED,
         "The provided token is malformed, corrupted, or invalid.",
       );
     }
 
     throw new AppError(
       "Unauthorized",
-      401,
+      httpStatus.UNAUTHORIZED,
       "Authentication failed due to an invalid token.",
     );
   }

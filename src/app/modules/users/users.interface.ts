@@ -1,11 +1,16 @@
 import type { TRole, TStatus } from "../../../../generated/prisma/enums";
 
-export interface ISafeUser {
+export interface IBaseUser {
   id: string;
-  userName: string;
   email: string;
   role: TRole;
   status: TStatus;
+}
+export interface IAuthUser extends IBaseUser {
+  userName: string;
+}
+
+export interface ISafeUser extends IAuthUser {
   emailVerifiedAt: Date | null;
   lastLoginAt: Date | null;
   createdAt: Date;
@@ -20,7 +25,9 @@ export interface ISavedProfile {
   bio: string | null;
   avatarMediaId: string | null;
   websiteUrl: string | null;
-  socialLinks: Record<string, any> | null;
+  facebookUrl: string | null;
+  instagramUrl: string | null;
+  twitterUrl: string | null;
   followerCount: number;
   followingCount: number;
   postCount: number;
@@ -28,9 +35,12 @@ export interface ISavedProfile {
   updatedAt: Date;
 }
 
-export interface IJwtPayload {
-  id: string;
-  email: string;
-  role: TRole;
-  status: TStatus;
-}
+export interface IJwtPayload extends IBaseUser {}
+
+/**
+ * Full profile response type
+ * profile nullable because User.profile is optional in schema
+ */
+export type TFullUserProfile = ISafeUser & {
+  profile: ISavedProfile | null;
+};

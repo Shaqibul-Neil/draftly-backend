@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import type { TApplication, TRequest, TResponse } from "./types/express.types";
-import router from "./app/routes";
+import router, { mountedPaths } from "./app/routes";
 import { globalErrorHandler } from "./middlewares/globalErrorHandler";
 import config from "./config";
 import { sendResponse } from "./utils/sendResponse";
@@ -12,12 +12,11 @@ const app: TApplication = express();
 /**
  * Middleware Pipeline
  */
-// In app.ts:
 app.use(
   cors({
     origin: [config.url, config.local_url],
     credentials: true,
-    methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    methods: ["GET", "PUT", "POST", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
@@ -28,21 +27,19 @@ app.use(cookieParser());
 
 /**
  * Application Routes
- * Prefixing all API routes with /api
+ * Mounted at /api. The version segment (/v1) is added per-module inside
+ * src/app/routes/index.ts. `mountedPaths` is derived from the route registry,
+ * so the endpoint list below can never drift out of sync with real routes.
  */
 app.use("/api", router);
+
 app.get("/", (req: TRequest, res: TResponse) => {
   sendResponse({
     res,
     status: 200,
     success: true,
     message: "Welcome to Draftly Server",
-    data: {
-      endpoints: {
-        auth: "/api/auth",
-        posts: "/api/posts",
-      },
-    },
+    data: { endpoints: mountedPaths },
   });
 });
 
@@ -53,14 +50,10 @@ app.use((req: TRequest, res: TResponse) => {
     status: 404,
     success: false,
     message: "API endpoint not found",
-    data: {
-      endpoints: {
-        auth: "/api/auth",
-        posts: "/api/posts",
-      },
-    },
+    data: { endpoints: mountedPaths },
   });
 });
+
 // Global Error Handler
 app.use(globalErrorHandler);
 

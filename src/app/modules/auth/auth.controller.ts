@@ -8,6 +8,8 @@ import type {
   TRegisterUserPayload,
 } from "./auth.validation";
 import { setRefreshTokenCookie } from "../../../utils/cookie";
+import { AppError } from "../../../utils/appError";
+import { jwtToken } from "../../../utils/jwt";
 
 class AuthController {
   constructor(private authService: AuthService) {}
@@ -24,6 +26,7 @@ class AuthController {
       data: user,
     });
   });
+
   //----------------LOGIN USER----------------
   login = asyncHandler(async (req: TRequest, res: TResponse) => {
     const payload = req.body as TLoginUserPayload;
@@ -38,7 +41,39 @@ class AuthController {
       status: httpStatus.OK,
       success: true,
       message: "User logged in successfully",
-      data: { accessToken, refreshToken, user: safeUser },
+      data: {
+        accessToken,
+        tokenType: "Bearer",
+        expiresIn: 900,
+        user: safeUser,
+      },
+    });
+  });
+
+  //----------------REFRESH TOKEN----------------
+  refreshToken = asyncHandler(async (req: TRequest, res: TResponse) => {
+    const refreshToken = req.cookies.refreshToken;
+    if (!refreshToken)
+      throw new AppError(
+        "Unauthorized",
+        httpStatus.UNAUTHORIZED,
+        "Refresh token is missing from your request cookies.",
+      );
+
+    // Validate token and get user via service layer
+    const user = await this.authService.refreshToken(refreshToken);
+
+    // Token Rotation : Invalidate previous refresh token by issuing a new one
+    const { accessToken, refreshToken: newRefreshToken } =
+      jwtToken.signToken(user);
+
+    setRefreshTokenCookie(res, newRefreshToken);
+    sendResponse({
+      res,
+      status: httpStatus.OK,
+      success: true,
+      message: "Access token generated",
+      data: { accessToken },
     });
   });
 }

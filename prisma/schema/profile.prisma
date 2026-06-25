@@ -6,7 +6,9 @@ model Profile {
     bio String?  @db.Text
     avatarMediaId String? @db.Uuid @map("avatar_media_id") 
     websiteUrl String?  @db.Text @map("website_url")
-    socialLinks Json? @map("social_links")
+    facebookUrl String? @db.Text @map("facebook_url")
+    instagramUrl String? @db.Text @map("instagram_url")
+    twitterUrl String? @db.Text @map("twitter_url")
     followerCount Int @default(0) @map("follower_count")
     followingCount Int @default(0) @map("following_count")
     postCount Int @default(0) @map("post_count")
@@ -14,6 +16,6 @@ model Profile {
     updatedAt DateTime @updatedAt @map("updated_at")
 
     // 🔗 Relations
-    user User @relation(fields: [userId], references: [id])
+    user User @relation(fields: [userId], references: [id],onDelete:Cascade)
     @@map("profiles")
 }

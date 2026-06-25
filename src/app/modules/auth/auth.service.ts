@@ -7,15 +7,16 @@ import type {
   TLoginUserPayload,
   TRegisterUserPayload,
 } from "./auth.validation";
-import type { IJwtPayload, ISafeUser } from "../users/users.interface";
+import type { IAuthUser, IJwtPayload } from "../users/users.interface";
 import { jwtToken } from "../../../utils/jwt";
+import { TRole, TStatus } from "../../../../generated/prisma/enums";
 
 export class AuthService {
   /**
    * Registers a new user.
    * Handles business logic: duplicate check, password hashing, and persistence.
    */
-  async registerUser(payload: TRegisterUserPayload): Promise<ISafeUser> {
+  async registerUser(payload: TRegisterUserPayload): Promise<IAuthUser> {
     const { userName, firstName, lastName, email, password } = payload;
 
     const normalizedEmail = email.trim().toLowerCase();
@@ -55,8 +56,8 @@ export class AuthService {
         userName: normalizedUserName,
         email: normalizedEmail,
         passwordHash: hashedPassword,
-        role: "READER",
-        status: "ACTIVE",
+        role: TRole.READER,
+        status: TStatus.ACTIVE,
         profile: {
           create: {
             firstName: normalizedFirstName,
@@ -67,15 +68,20 @@ export class AuthService {
       omit: { passwordHash: true },
     });
 
-    return user;
+    const { emailVerifiedAt, lastLoginAt, createdAt, updatedAt, ...authUser } =
+      user;
+    return authUser;
   }
 
   /**
    * Login user.
-   * Handles business logic: duplicate check, password hashing, and persistence.
    */
 
-  async loginUser(payload: TLoginUserPayload) {
+  async loginUser(payload: TLoginUserPayload): Promise<{
+    safeUser: IAuthUser;
+    accessToken: string;
+    refreshToken: string;
+  }> {
     const { identifier, password } = payload;
     const isEmail = identifier.includes("@");
 
@@ -101,11 +107,13 @@ export class AuthService {
       );
     }
 
-    if (user.status === "SUSPENDED") {
+    if (user.status !== TStatus.ACTIVE) {
       throw new AppError(
         "Login Failed",
         httpStatus.FORBIDDEN,
-        "Your account has been suspended.",
+        user.status === TStatus.SUSPENDED
+          ? "Your account has been suspended."
+          : "Your account is not active.",
       );
     }
 
@@ -138,8 +146,37 @@ export class AuthService {
     } = user;
 
     return { safeUser, accessToken, refreshToken };
-    // "tokenType": "Bearer",
-    //   "expiresIn": 900,
+  }
+
+  /**
+   * Refresh Token.
+   */
+  async refreshToken(refreshToken: string): Promise<IJwtPayload> {
+    const payload = jwtToken.verifyToken(refreshToken, "refresh");
+    const user = await prisma.user.findFirst({
+      where: { id: payload.id },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        status: true,
+      },
+    });
+
+    if (!user)
+      throw new AppError(
+        "User not found",
+        httpStatus.NOT_FOUND,
+        "The requested user record does not exist in the system.",
+      );
+
+    if (user.status !== TStatus.ACTIVE)
+      throw new AppError(
+        "Login Failed",
+        httpStatus.FORBIDDEN,
+        "The requested user is suspended.",
+      );
+    return user;
   }
 }
 
