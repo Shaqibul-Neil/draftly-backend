@@ -1,35 +1,36 @@
-model Post{
-    id                              String          @id @default(uuid()) @db.Uuid
-    authorId                        String?         @db.Uuid @map("author_id")
-    title                           String          @db.VarChar(255)
-    slug                            String          @unique @db.VarChar(255)
-    content                         String          @db.Text
-    isFeatured                      Boolean         @default(false) @map("is_featured")   
-    status                          TPostStatus     @default(DRAFT)
-    visibility                      TPostVisibility @default(PUBLIC)
-    thumbnailMediaId              String?         @map("thumbnail_media_id") @db.Uuid
-    coverMediaId                  String?         @map("cover_media_id") @db.Uuid
-    totalViews                     Int             @default(0) @map("total_views")
-    totalComment                   Int              @default(0) @map("total_comment")
-    totalLikes                      Int             @default(0) @map("total_likes")
-    totalBookmark                   Int             @default(0) @map("total_bookmark")
-    totalShare                      Int             @default(0) @map("total_share")
-    totalReadingTimeMinutes         Int             @default(0) @map("total_reading_time_minutes")
-    seoTitle                       String?          @map("seo_title") @db.VarChar(255)
-    seoDescription                 String?          @map("seo_description") @db.Text
-    createdAt                       DateTime        @default(now()) @map("created_at")
-    publishedAt                     DateTime?        @map("published_at")
-    scheduledAt                     DateTime?         @map("scheduled_at")
-    updatedAt                       DateTime        @updatedAt @map("updated_at")
+model Post {
+  id                      String          @id @default(uuid()) @db.Uuid
+  authorId                String?         @map("author_id") @db.Uuid
+  title                   String          @db.VarChar(255)
+  slug                    String          @unique @db.VarChar(255)
+  content                 String          @db.Text
+  isFeatured              Boolean         @default(false) @map("is_featured")
+  status                  TPostStatus     @default(PUBLISHED)
+  visibility              TPostVisibility @default(PUBLIC)
+  thumbnailMediaId        String?         @map("thumbnail_media_id") @db.Uuid
+  coverMediaId            String?         @map("cover_media_id") @db.Uuid
+  totalViews              Int             @default(0) @map("total_views")
+  totalComments            Int            @default(0) @map("total_comments")
+  totalLikes              Int             @default(0) @map("total_likes")
+  totalBookmarks           Int            @default(0) @map("total_bookmarks")
+  totalShares              Int            @default(0) @map("total_shares")
+  totalReadingTimeMinutes Int             @default(0) @map("total_reading_time_minutes")
+  seoTitle                String?         @map("seo_title") @db.VarChar(255)
+  seoDescription          String?         @map("seo_description") @db.Text
+  createdAt               DateTime        @default(now()) @map("created_at")
+  publishedAt             DateTime?       @map("published_at")
+  scheduledAt             DateTime?       @map("scheduled_at")
+  updatedAt               DateTime        @updatedAt @map("updated_at")
 
-     // 🔗 Relations
-     author                         User?       @relation(fields:[authorId], references:[id], onDelete:SetNull)
-     postCategory                 PostCategory[]
-     postLike                      PostLike[]
-     comments                       Comment[]
-     postTags                       PostTag[]
-     media                          Media[]
-     
-     @@map("posts")
+  // 🔗 Relations
+  author       User?          @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  postCategory PostCategory[]
+  postLike     PostLike[]
+  comments     Comment[]
+  postTags     PostTag[]
+  media        Media[]
 
+  //indexing
+  @@index([authorId])
+  @@map("posts")
 }

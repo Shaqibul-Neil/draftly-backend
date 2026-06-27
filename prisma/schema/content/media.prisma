@@ -1,19 +1,18 @@
-model Media{
-    id              String      @id @default(uuid()) @db.Uuid
-    userId          String?     @map("user_id") @db.Uuid
-    postId          String?     @map("post_id") @db.Uuid
-    fileSize        Int         @map("file_size")
-    publicUrl       String      @map("public_url") @db.Text
-    width           Int?
-    height          Int?
-    createdAt       DateTime    @default(now()) @map("created_at")
-    updatedAt       DateTime    @updatedAt @map("updated_at")
+model Media {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid
+  postId    String?  @map("post_id") @db.Uuid
+  fileSize  Int      @map("file_size")
+  publicUrl String   @map("public_url") @db.Text
+  width     Int?
+  height    Int?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-     // 🔗 Relations
-    user           User?        @relation(fields:[userId], references:[id], onDelete:SetNull)
-    post           Post?      @relation(fields: [postId], references: [id], onDelete: Cascade)
-    profileAvatar   Profile?    @relation("ProfileAvatar")
+  // 🔗 Relations
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  post          Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  profileAvatar Profile? @relation("ProfileAvatar")
 
-     @@map("media")
-     
+  @@map("media")
 }

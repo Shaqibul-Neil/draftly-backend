@@ -15,11 +15,11 @@ const config = {
   jwt: {
     access: {
       secret: env.JWT_ACCESS_TOKEN_SECRET as string,
-      expires_in: (env.JWT_ACCESS_EXPIRY as StringValue) ?? "15m",
+      expires_in: (env.JWT_ACCESS_EXPIRY as string) ?? "15m",
     },
     refresh: {
       secret: env.JWT_REFRESH_TOKEN_SECRET as string,
-      expires_in: (env.JWT_REFRESH_EXPIRY as StringValue) ?? "7d",
+      expires_in: (env.JWT_REFRESH_EXPIRY as string) ?? "7d",
     },
   },
   login_rl_window_ms: Number(env.LOGIN_RL_WINDOW_MS ?? 15 * 60 * 1000),

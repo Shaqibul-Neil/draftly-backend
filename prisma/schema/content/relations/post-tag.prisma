@@ -1,12 +1,12 @@
-model PostTag{
-    postId            String   @map("post_id") @db.Uuid
-    tagId             String   @map("tag_id") @db.Uuid
-    createdAt         DateTime    @default(now()) @map("created_at")
+model PostTag {
+  postId    String   @map("post_id") @db.Uuid
+  tagId     String   @map("tag_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
 
-    // 🔗 Relations
-    post             Post    @relation(fields:[postId], references:[id], onDelete:Cascade)
-    tag              Tag    @relation(fields:[tagId], references:[id], onDelete:Cascade)
+  // 🔗 Relations
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
-    @@id([postId, tagId])
-    @@map("post_tags")
+  @@id([postId, tagId])
+  @@map("post_tags")
 }

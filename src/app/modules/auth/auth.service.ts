@@ -127,6 +127,12 @@ export class AuthService {
       );
     }
 
+    // stamp last login time
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
+
     const jwtPayload = jwtToken.createJwtPayload(user);
 
     const tokens = jwtToken.signToken(jwtPayload);

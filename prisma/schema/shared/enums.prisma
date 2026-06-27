@@ -1,12 +1,12 @@
 enum TRole {
-    AUTHOR
-    READER
-    ADMIN
+  AUTHOR
+  READER
+  ADMIN
 }
 
 enum TStatus {
-    ACTIVE
-    SUSPENDED
+  ACTIVE
+  SUSPENDED
 }
 
 enum TPostStatus {
@@ -17,12 +17,12 @@ enum TPostStatus {
 }
 
 enum TPostVisibility {
-    PUBLIC   
-    PREMIUM 
+  PUBLIC
+  PREMIUM
 }
 
 enum TCommentStatus {
-  ACTIVE 
-  HIDDEN 
+  ACTIVE
+  HIDDEN
   FLAGGED
 }

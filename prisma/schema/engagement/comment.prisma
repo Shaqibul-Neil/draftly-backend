@@ -1,21 +1,24 @@
-model Comment{
-    id              String          @id @default(uuid()) @db.Uuid
-    userId          String?         @map("user_id") @db.Uuid
-    postId          String          @map("post_id") @db.Uuid
-    parentCommentId String?         @map("parent_comment_id") @db.Uuid
-    content         String          @db.Text
-    status          TCommentStatus  @default(ACTIVE)
-    totalLikes      Int             @default(0) @map("total_likes")
-    totalReplies    Int             @default(0) @map("total_replies")
-    createdAt      DateTime        @default(now()) @map("created_at") 
-    updatedAt       DateTime        @updatedAt() @map("updated_at")
+model Comment {
+  id              String         @id @default(uuid()) @db.Uuid
+  userId          String?        @map("user_id") @db.Uuid
+  postId          String         @map("post_id") @db.Uuid
+  parentCommentId String?        @map("parent_comment_id") @db.Uuid
+  content         String         @db.Text
+  status          TCommentStatus @default(ACTIVE)
+  totalLikes      Int            @default(0) @map("total_likes")
+  totalReplies    Int            @default(0) @map("total_replies")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt() @map("updated_at")
 
-    // 🔗 Relations
-    user            User?            @relation(fields:[userId], references:[id], onDelete:SetNull)
-    posts           Post           @relation(fields:[postId], references:[id], onDelete:Cascade)
-    parent          Comment?       @relation("CommentReplies", fields:[parentCommentId], references:[id], onDelete:Cascade)
-    replies         Comment[]      @relation("CommentReplies")
-    commentLikes    CommentLike[]
+  // 🔗 Relations
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  posts        Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parent       Comment?      @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  replies      Comment[]     @relation("CommentReplies")
+  commentLikes CommentLike[]
 
-    @@map("comments")
+  //indexing
+  @@index([postId])
+  @@index([userId])
+  @@map("comments")
 }

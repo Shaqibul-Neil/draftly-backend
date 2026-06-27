@@ -1,4 +1,4 @@
-import jwt, { type JwtPayload } from "jsonwebtoken";
+import jwt, { type JwtPayload, type SignOptions } from "jsonwebtoken";
 import httpStatus from "http-status";
 import config from "../config";
 import { AppError } from "./appError";
@@ -43,11 +43,11 @@ const verifyToken = (token: string, type: "access" | "refresh") => {
 
 const signToken = (payload: IJwtPayload) => {
   const accessToken = jwt.sign(payload, config.jwt.access.secret, {
-    expiresIn: config.jwt.access.expires_in,
+    expiresIn: config.jwt.access.expires_in as SignOptions["expiresIn"],
   });
 
   const refreshToken = jwt.sign(payload, config.jwt.refresh.secret, {
-    expiresIn: config.jwt.refresh.expires_in,
+    expiresIn: config.jwt.refresh.expires_in as SignOptions["expiresIn"],
   });
 
   return {
