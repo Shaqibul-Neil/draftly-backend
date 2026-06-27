@@ -12,7 +12,6 @@ export const POST_LIST_INCLUDE = {
       id: true,
       userName: true,
       email: true,
-      role: true,
     },
   },
   _count: { select: { comments: true, postLike: true } },
@@ -40,7 +39,6 @@ export const POST_DETAILS_INCLUDE = {
       id: true,
       userName: true,
       email: true,
-      role: true,
     },
   },
   comments: {

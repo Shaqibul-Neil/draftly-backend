@@ -10,6 +10,12 @@ export const mapPost = (post: TPostListWithRelations): IPostResponse => {
   return {
     id: post.id,
     authorId: post.authorId,
+    author: post.author
+      ? {
+          userName: post.author?.userName,
+          email: post.author?.email,
+        }
+      : null,
     title: post.title,
     slug: post.slug,
     content: post.content,

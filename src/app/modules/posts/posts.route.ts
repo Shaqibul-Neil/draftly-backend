@@ -3,7 +3,11 @@ import { validateRequest } from "../../../middlewares/validate";
 import { protectedRoute, roleRoute } from "../../routes/route-helpers";
 import type { TRouteModule } from "../../routes/route.types";
 import { postController } from "./posts.controller";
-import { createPostValidationSchema } from "./posts.validation";
+import {
+  createPostValidationSchema,
+  postIdParamValidationSchema,
+  updatePostValidationSchema,
+} from "./posts.validation";
 
 export const postsRouteModule: TRouteModule = {
   basePath: "/posts",
@@ -58,6 +62,7 @@ export const postsRouteModule: TRouteModule = {
     {
       method: "get",
       path: "/:postId",
+      middlewares: [validateRequest(postIdParamValidationSchema)],
       handler: postController.getPostById,
       name: "posts.getPostById",
       description: "Get A Single Post",
@@ -66,7 +71,11 @@ export const postsRouteModule: TRouteModule = {
     {
       method: "patch",
       path: "/:postId",
-      middlewares: roleRoute([TRole.ADMIN, TRole.AUTHOR]),
+      middlewares: roleRoute(
+        [TRole.ADMIN, TRole.AUTHOR],
+        validateRequest(postIdParamValidationSchema),
+        validateRequest(updatePostValidationSchema),
+      ),
       handler: postController.updatePost,
       name: "posts.updatePost",
       description: "Update A Post",
@@ -75,7 +84,10 @@ export const postsRouteModule: TRouteModule = {
     {
       method: "delete",
       path: "/:postId",
-      middlewares: roleRoute([TRole.ADMIN, TRole.AUTHOR]),
+      middlewares: roleRoute(
+        [TRole.ADMIN, TRole.AUTHOR],
+        validateRequest(postIdParamValidationSchema),
+      ),
       handler: postController.deletePost,
       name: "posts.deletePost",
       description: "Delete A Post",

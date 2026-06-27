@@ -97,6 +97,12 @@ export const updatePostValidationSchema = z.object({
     }),
 });
 
+export const postIdParamValidationSchema = z.object({
+  params: z.object({
+    postId: z.string().uuid("Invalid post ID — must be a valid UUID"),
+  }),
+});
+
 export type TUpdatePostPayload = z.infer<
   typeof updatePostValidationSchema
 >["body"];

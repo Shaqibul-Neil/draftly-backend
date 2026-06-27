@@ -11,6 +11,10 @@ import type {
 export interface IPostResponse {
   id: string;
   authorId: string | null;
+  author: {
+    userName: string;
+    email: string;
+  } | null;
   title: string;
   slug: string;
   content: string;
