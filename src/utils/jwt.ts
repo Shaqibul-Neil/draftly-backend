@@ -1,8 +1,8 @@
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import httpStatus from "http-status";
 import config from "../config";
-import type { IJwtPayload } from "../app/modules/users/users.interface";
 import { AppError } from "./appError";
+import type { IJwtPayload } from "../app/modules/auth/auth.interface";
 
 /**
  * Token Verification
@@ -12,7 +12,7 @@ const verifyToken = (token: string, type: "access" | "refresh") => {
     type === "access" ? config.jwt.access.secret : config.jwt.refresh.secret;
   try {
     const decode = jwt.verify(token, secret);
-    return decode as JwtPayload;
+    return decode as IJwtPayload & JwtPayload;
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
       throw new AppError(
@@ -56,4 +56,11 @@ const signToken = (payload: IJwtPayload) => {
   };
 };
 
-export const jwtToken = { verifyToken, signToken };
+const createJwtPayload = (user: IJwtPayload): IJwtPayload => ({
+  id: user.id,
+  email: user.email,
+  role: user.role,
+  status: user.status,
+});
+
+export const jwtToken = { verifyToken, signToken, createJwtPayload };

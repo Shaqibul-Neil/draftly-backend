@@ -1,0 +1,28 @@
+enum TRole {
+    AUTHOR
+    READER
+    ADMIN
+}
+
+enum TStatus {
+    ACTIVE
+    SUSPENDED
+}
+
+enum TPostStatus {
+  DRAFT
+  PUBLISHED
+  SCHEDULED
+  ARCHIVED
+}
+
+enum TPostVisibility {
+    PUBLIC   
+    PREMIUM 
+}
+
+enum TCommentStatus {
+  ACTIVE 
+  HIDDEN 
+  FLAGGED
+}

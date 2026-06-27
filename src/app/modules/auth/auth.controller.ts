@@ -9,7 +9,7 @@ import type {
 } from "./auth.validation";
 import { setRefreshTokenCookie } from "../../../utils/cookie";
 import { AppError } from "../../../utils/appError";
-import { jwtToken } from "../../../utils/jwt";
+import config from "../../../config";
 
 class AuthController {
   constructor(private authService: AuthService) {}
@@ -30,9 +30,8 @@ class AuthController {
   //----------------LOGIN USER----------------
   login = asyncHandler(async (req: TRequest, res: TResponse) => {
     const payload = req.body as TLoginUserPayload;
-    const { safeUser, accessToken, refreshToken } =
-      await this.authService.loginUser(payload);
-
+    const { safeUser, tokens } = await this.authService.loginUser(payload);
+    const { accessToken, refreshToken } = tokens;
     //set cookie
     setRefreshTokenCookie(res, refreshToken);
 
@@ -44,7 +43,7 @@ class AuthController {
       data: {
         accessToken,
         tokenType: "Bearer",
-        expiresIn: 900,
+        expiresIn: config.jwt.access.expires_in,
         user: safeUser,
       },
     });
@@ -60,12 +59,8 @@ class AuthController {
         "Refresh token is missing from your request cookies.",
       );
 
-    // Validate token and get user via service layer
-    const user = await this.authService.refreshToken(refreshToken);
-
-    // Token Rotation : Invalidate previous refresh token by issuing a new one
     const { accessToken, refreshToken: newRefreshToken } =
-      jwtToken.signToken(user);
+      await this.authService.refreshToken(refreshToken);
 
     setRefreshTokenCookie(res, newRefreshToken);
     sendResponse({

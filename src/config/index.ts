@@ -11,17 +11,19 @@ const config = {
   port: env.PORT as string,
   database_url: env.DATABASE_URL as string,
   node_env: env.NODE_ENV as string,
-  bcrypt_salt_rounds: Number(env.BCRYPT_SALT_ROUNDS),
+  bcrypt_salt_rounds: Number(env.BCRYPT_SALT_ROUNDS ?? 10),
   jwt: {
     access: {
       secret: env.JWT_ACCESS_TOKEN_SECRET as string,
-      expires_in: env.JWT_ACCESS_EXPIRY as StringValue,
+      expires_in: (env.JWT_ACCESS_EXPIRY as StringValue) ?? "15m",
     },
     refresh: {
       secret: env.JWT_REFRESH_TOKEN_SECRET as string,
-      expires_in: env.JWT_REFRESH_EXPIRY as StringValue,
+      expires_in: (env.JWT_REFRESH_EXPIRY as StringValue) ?? "7d",
     },
   },
+  login_rl_window_ms: Number(env.LOGIN_RL_WINDOW_MS ?? 15 * 60 * 1000),
+  login_rl_max: Number(env.LOGIN_RL_MAX ?? 5),
 };
 
 export default config;

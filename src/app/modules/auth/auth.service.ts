@@ -7,9 +7,10 @@ import type {
   TLoginUserPayload,
   TRegisterUserPayload,
 } from "./auth.validation";
-import type { IAuthUser, IJwtPayload } from "../users/users.interface";
+import type { IAuthUser } from "../users/users.interface";
 import { jwtToken } from "../../../utils/jwt";
 import { TRole, TStatus } from "../../../../generated/prisma/enums";
+import type { ITokens } from "./auth.interface";
 
 export class AuthService {
   /**
@@ -79,8 +80,7 @@ export class AuthService {
 
   async loginUser(payload: TLoginUserPayload): Promise<{
     safeUser: IAuthUser;
-    accessToken: string;
-    refreshToken: string;
+    tokens: ITokens;
   }> {
     const { identifier, password } = payload;
     const isEmail = identifier.includes("@");
@@ -127,14 +127,9 @@ export class AuthService {
       );
     }
 
-    const jwtPayload: IJwtPayload = {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      status: user.status,
-    };
+    const jwtPayload = jwtToken.createJwtPayload(user);
 
-    const { accessToken, refreshToken } = jwtToken.signToken(jwtPayload);
+    const tokens = jwtToken.signToken(jwtPayload);
 
     const {
       passwordHash,
@@ -145,13 +140,13 @@ export class AuthService {
       ...safeUser
     } = user;
 
-    return { safeUser, accessToken, refreshToken };
+    return { safeUser, tokens };
   }
 
   /**
    * Refresh Token.
    */
-  async refreshToken(refreshToken: string): Promise<IJwtPayload> {
+  async refreshToken(refreshToken: string): Promise<ITokens> {
     const payload = jwtToken.verifyToken(refreshToken, "refresh");
     const user = await prisma.user.findFirst({
       where: { id: payload.id },
@@ -176,7 +171,10 @@ export class AuthService {
         httpStatus.FORBIDDEN,
         "The requested user is suspended.",
       );
-    return user;
+
+    const jwtPayload = jwtToken.createJwtPayload(user);
+    const newTokens = jwtToken.signToken(jwtPayload);
+    return newTokens;
   }
 }
 

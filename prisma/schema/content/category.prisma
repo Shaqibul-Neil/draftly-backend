@@ -1,0 +1,17 @@
+model Category {
+  id                String      @id @default(uuid()) @db.Uuid
+  name              String      @unique @db.VarChar(255)
+  slug              String      @unique @db.VarChar(255)
+  description       String?     @db.Text
+  parentCategoryId  String?     @map("parent_category_id") @db.Uuid
+
+  createdAt         DateTime    @default(now()) @map("created_at")
+  updatedAt         DateTime    @updatedAt @map("updated_at")
+
+  // 🔗 Relations
+  parent            Category?   @relation("CategoryHierarchy", fields:[parentCategoryId], references:[id], onDelete:Restrict)
+  children          Category[]  @relation("CategoryHierarchy")
+  postCategories    PostCategory[]
+
+  @@map("categories")
+}

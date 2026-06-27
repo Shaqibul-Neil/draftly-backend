@@ -35,8 +35,6 @@ export interface ISavedProfile {
   updatedAt: Date;
 }
 
-export interface IJwtPayload extends IBaseUser {}
-
 /**
  * Full profile response type
  * profile nullable because User.profile is optional in schema

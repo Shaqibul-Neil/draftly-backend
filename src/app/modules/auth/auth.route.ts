@@ -1,3 +1,4 @@
+import { loginLimiter } from "../../../middlewares/rateLimiter";
 import { validateRequest } from "../../../middlewares/validate";
 import type { TRouteModule } from "../../routes/route.types";
 import { authController } from "./auth.controller";
@@ -21,7 +22,7 @@ export const authRouteModule: TRouteModule = {
     {
       method: "post",
       path: "/login",
-      middlewares: [validateRequest(loginValidationSchema)],
+      middlewares: [loginLimiter, validateRequest(loginValidationSchema)],
       handler: authController.login,
       name: "auth.login",
       description: "Authenticate a user and issue access/refresh tokens.",
