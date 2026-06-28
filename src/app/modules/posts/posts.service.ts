@@ -77,11 +77,6 @@ export class PostService {
   }
 
   //------------------------------------------
-  //Get Post Stats
-  //------------------------------------------
-  async getPostStats() {}
-
-  //------------------------------------------
   //Get My Posts
   //------------------------------------------
   async getMyPosts(userId: string): Promise<IPostResponse[]> {
@@ -97,14 +92,15 @@ export class PostService {
   //------------------------------------------
   //Get Post By Id
   //------------------------------------------
-  async getPostById(postId: string): Promise<IPostResponse> {
-    const updatedPost = await prisma.post.update({
-      where: { id: postId },
-      data: { totalViews: { increment: 1 } },
-      include: POST_DETAILS_INCLUDE,
+  async getPostById(postId: string): Promise<IPostDetailResponse> {
+    return await prisma.$transaction(async (tx) => {
+      const updatedPost = await tx.post.update({
+        where: { id: postId },
+        data: { totalViews: { increment: 1 } },
+        include: POST_DETAILS_INCLUDE,
+      });
+      return mapPostDetail(updatedPost);
     });
-
-    return mapPostDetail(updatedPost);
   }
 
   //------------------------------------------
@@ -116,41 +112,43 @@ export class PostService {
     userId: string,
     userRole: TRole,
   ): Promise<IPostDetailResponse> {
-    //get the required post
-    const existingPost = await prisma.post.findUniqueOrThrow({
-      where: { id: postId },
-      select: { authorId: true },
+    return await prisma.$transaction(async (tx) => {
+      //get the required post
+      const existingPost = await tx.post.findUniqueOrThrow({
+        where: { id: postId },
+        select: { authorId: true },
+      });
+
+      //check the user status
+      ensurePostOwner(userId, existingPost.authorId, userRole);
+
+      const { categoryIds, tags, ...postData } = payload;
+
+      const { slug, publishedAt, tagNames } = prepareUpdatePostMeta(
+        postData.title,
+        postData.status,
+        tags,
+      );
+
+      const updatedPost = await tx.post.update({
+        where: { id: postId },
+        data: {
+          ...postData,
+          ...(slug && { slug }),
+          ...(publishedAt && { publishedAt }),
+
+          ...(categoryIds !== undefined && {
+            postCategory: buildCategoryRelations(categoryIds),
+          }),
+
+          ...(tagNames !== undefined && {
+            postTags: buildTagRelations(tagNames),
+          }),
+        },
+        include: POST_DETAILS_INCLUDE,
+      });
+      return mapPostDetail(updatedPost);
     });
-
-    //check the user status
-    ensurePostOwner(userId, existingPost.authorId, userRole);
-
-    const { categoryIds, tags, ...postData } = payload;
-
-    const { slug, publishedAt, tagNames } = prepareUpdatePostMeta(
-      postData.title,
-      postData.status,
-      tags,
-    );
-
-    const updatedPost = await prisma.post.update({
-      where: { id: postId },
-      data: {
-        ...postData,
-        ...(slug && { slug }),
-        ...(publishedAt && { publishedAt }),
-
-        ...(categoryIds !== undefined && {
-          postCategory: buildCategoryRelations(categoryIds),
-        }),
-
-        ...(tagNames !== undefined && {
-          postTags: buildTagRelations(tagNames),
-        }),
-      },
-      include: POST_DETAILS_INCLUDE,
-    });
-    return mapPostDetail(updatedPost);
   }
 
   //------------------------------------------
@@ -161,22 +159,24 @@ export class PostService {
     userId: string,
     userRole: TRole,
   ): Promise<void> {
-    //get the required post
-    const existingPost = await prisma.post.findUniqueOrThrow({
-      where: { id: postId },
-      select: { authorId: true },
+    await prisma.$transaction(async (tx) => {
+      //get the required post
+      const existingPost = await tx.post.findUniqueOrThrow({
+        where: { id: postId },
+        select: { authorId: true },
+      });
+
+      //check the user status
+      ensurePostOwner(userId, existingPost.authorId, userRole, "delete");
+
+      await tx.post.delete({ where: { id: postId } });
     });
-
-    //check the user status
-    ensurePostOwner(userId, existingPost.authorId, userRole, "delete");
-
-    await prisma.post.delete({ where: { id: postId } });
   }
 
   //------------------------------------------
   //Delete All Posts
   //------------------------------------------
-  async deleteAllPosts() {}
+  async deleteAllPosts(userRole: TRole, userId: string, status: TPostStatus) {}
 
   //------------------------------------------
   //Post Moderate --> post featured or not admin actions

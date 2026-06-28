@@ -34,15 +34,6 @@ export const postsRouteModule: TRouteModule = {
     },
     {
       method: "get",
-      path: "/stats",
-      middlewares: roleRoute([TRole.ADMIN, TRole.AUTHOR]),
-      handler: postController.getPostStats,
-      name: "posts.getPostStats",
-      description: "Get Post Statistics",
-      tags: ["Posts"],
-    },
-    {
-      method: "get",
       path: "/my-posts",
       middlewares: protectedRoute(),
       handler: postController.getMyPosts,

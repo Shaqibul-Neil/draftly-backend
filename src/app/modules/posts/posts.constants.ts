@@ -5,6 +5,9 @@
 // - Get My Posts
 // - Search Posts
 // - Admin Post List
+
+import { TCommentStatus } from "../../../../generated/prisma/enums";
+
 //------------------------------------------
 export const POST_LIST_INCLUDE = {
   author: {
@@ -43,6 +46,7 @@ export const POST_DETAILS_INCLUDE = {
   },
   comments: {
     take: 5,
+    where: { status: TCommentStatus.ACTIVE },
     orderBy: { createdAt: "desc" },
     include: {
       user: {

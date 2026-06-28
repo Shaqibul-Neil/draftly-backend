@@ -39,9 +39,6 @@ class PostController {
     });
   });
 
-  //Get Post Stats
-  getPostStats = asyncHandler(async (req: TRequest, res: TResponse) => {});
-
   //Get My Posts
   getMyPosts = asyncHandler(async (req: TRequest, res: TResponse) => {
     const userId = req.user.id as string;
