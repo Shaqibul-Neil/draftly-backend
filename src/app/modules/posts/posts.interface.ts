@@ -3,6 +3,7 @@ import type {
   TPostStatus,
   TPostVisibility,
 } from "../../../../generated/prisma/enums";
+import type { TPagination } from "../../../types/types";
 import type {
   POST_DETAILS_INCLUDE,
   POST_LIST_INCLUDE,
@@ -61,3 +62,27 @@ export type TPostListWithRelations = Prisma.PostGetPayload<{
 export type TPostDetailsWithRelations = Prisma.PostGetPayload<{
   include: typeof POST_DETAILS_INCLUDE;
 }>;
+
+export type TPostSortField =
+  | "totalViews"
+  | "totalComments"
+  | "totalLikes"
+  | "totalShares"
+  | "totalReadingTimeMinutes";
+
+export interface IGetPostsParams {
+  limit?: number;
+  page?: number;
+  search?: string;
+  status?: TPostStatus;
+  visibility?: TPostVisibility;
+  sortBy?: TPostSortField;
+  sortOrder?: "asc" | "desc";
+  startDate?: Date;
+  endDate?: Date;
+}
+
+export interface IGetPostsResponse {
+  data: IPostResponse[];
+  meta: TPagination;
+}

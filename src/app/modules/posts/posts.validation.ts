@@ -103,6 +103,28 @@ export const postIdParamValidationSchema = z.object({
   }),
 });
 
+export const getPostsQueryValidationSchema = z.object({
+  query: z.object({
+    page: z.coerce.number().int().positive().optional(),
+    limit: z.coerce.number().int().positive().max(100).optional(),
+    search: z.string().trim().optional(),
+    status: z.enum(TPostStatus).optional(),
+    visibility: z.enum(TPostVisibility).optional(),
+    sortBy: z
+      .enum([
+        "totalViews",
+        "totalComments",
+        "totalLikes",
+        "totalShares",
+        "totalReadingTimeMinutes",
+      ])
+      .optional(),
+    sortOrder: z.enum(["asc", "desc"]).optional(),
+    startDate: z.coerce.date().optional(),
+    endDate: z.coerce.date().optional(),
+  }),
+});
+
 export type TUpdatePostPayload = z.infer<
   typeof updatePostValidationSchema
 >["body"];

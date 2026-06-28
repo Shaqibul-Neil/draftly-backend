@@ -1,7 +1,13 @@
 import { TPostStatus, TRole } from "../../../../generated/prisma/enums";
 import { prisma } from "../../../lib/prisma";
 import { generateSlug } from "../../../utils/utils";
-import type { IPostDetailResponse, IPostResponse } from "./posts.interface";
+import type {
+  IGetPostsParams,
+  IGetPostsResponse,
+  IPostDetailResponse,
+  IPostResponse,
+  TPostSortField,
+} from "./posts.interface";
 import type {
   TCreatePostPayload,
   TUpdatePostPayload,
@@ -15,6 +21,7 @@ import {
   prepareCreatePostMeta,
   prepareUpdatePostMeta,
 } from "./posts.helper";
+import type { Prisma } from "../../../../generated/prisma/client";
 
 export class PostService {
   //------------------------------------------
@@ -67,13 +74,82 @@ export class PostService {
   //------------------------------------------
   //Get All Post
   //------------------------------------------
-  async getPosts(): Promise<IPostResponse[]> {
-    const posts = await prisma.post.findMany({
-      orderBy: { createdAt: "desc" },
-      include: POST_LIST_INCLUDE,
-    });
+  async getPosts(params: IGetPostsParams): Promise<IGetPostsResponse> {
+    const where: Prisma.PostWhereInput = {};
 
-    return posts.map((post) => mapPost(post));
+    if (params.search) {
+      where.OR = [
+        {
+          title: {
+            contains: params.search,
+            mode: "insensitive",
+          },
+        },
+        {
+          content: {
+            contains: params.search,
+            mode: "insensitive",
+          },
+        },
+      ];
+    }
+
+    if (params.status) {
+      where.status = params.status;
+    }
+
+    if (params.visibility) {
+      where.visibility = params.visibility;
+    }
+
+    if (params.startDate || params.endDate) {
+      where.createdAt = {
+        ...(params.startDate && { gte: params.startDate }),
+        ...(params.endDate && { lte: params.endDate }),
+      };
+    }
+
+    const page = params.page ?? 1;
+    const limit = params.limit ?? 10;
+
+    const sortOrder = params.sortOrder ?? "desc";
+
+    const SORT_MAP: Record<
+      TPostSortField,
+      Prisma.PostOrderByWithRelationInput
+    > = {
+      totalViews: { totalViews: sortOrder },
+      totalComments: { comments: { _count: sortOrder } },
+      totalLikes: { postLike: { _count: sortOrder } },
+      totalShares: { totalShares: sortOrder },
+      totalReadingTimeMinutes: { totalReadingTimeMinutes: sortOrder },
+    };
+
+    const orderBy: Prisma.PostOrderByWithRelationInput = params.sortBy
+      ? SORT_MAP[params.sortBy]
+      : { createdAt: sortOrder };
+
+    const [posts, total] = await Promise.all([
+      prisma.post.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy,
+        include: POST_LIST_INCLUDE,
+      }),
+
+      prisma.post.count({ where }),
+    ]);
+
+    return {
+      data: posts.map((post) => mapPost(post)),
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   //------------------------------------------

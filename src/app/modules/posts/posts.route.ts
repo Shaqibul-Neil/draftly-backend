@@ -5,6 +5,7 @@ import type { TRouteModule } from "../../routes/route.types";
 import { postController } from "./posts.controller";
 import {
   createPostValidationSchema,
+  getPostsQueryValidationSchema,
   postIdParamValidationSchema,
   updatePostValidationSchema,
 } from "./posts.validation";
@@ -15,6 +16,7 @@ export const postsRouteModule: TRouteModule = {
     {
       method: "get",
       path: "/",
+      middlewares: [validateRequest(getPostsQueryValidationSchema)],
       handler: postController.getAllPosts,
       name: "posts.getAllPosts",
       description: "Get All Posts",

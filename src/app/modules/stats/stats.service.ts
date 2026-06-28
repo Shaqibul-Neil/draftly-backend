@@ -15,45 +15,43 @@ export class StatsService {
     userRole: TRole,
   ): Promise<IPostStatsResponse> {
     const baseWhere = userRole === TRole.ADMIN ? {} : { authorId: userId };
-    return await prisma.$transaction(async (tx) => {
-      const [
-        total,
-        published,
-        draft,
-        scheduled,
-        archived,
-        publicPosts,
-        premiumPosts,
-        featured,
-      ] = await Promise.all([
-        tx.post.count({ where: baseWhere }),
-        tx.post.count({
-          where: { ...baseWhere, status: TPostStatus.PUBLISHED },
-        }),
-        tx.post.count({
-          where: { ...baseWhere, status: TPostStatus.DRAFT },
-        }),
-        tx.post.count({
-          where: { ...baseWhere, status: TPostStatus.SCHEDULED },
-        }),
-        tx.post.count({
-          where: { ...baseWhere, status: TPostStatus.ARCHIVED },
-        }),
-        tx.post.count({
-          where: { ...baseWhere, visibility: TPostVisibility.PUBLIC },
-        }),
-        tx.post.count({
-          where: { ...baseWhere, visibility: TPostVisibility.PREMIUM },
-        }),
-        tx.post.count({ where: { ...baseWhere, isFeatured: true } }),
-      ]);
-      return {
-        total,
-        byStatus: { published, draft, scheduled, archived },
-        byVisibility: { public: publicPosts, premium: premiumPosts },
-        featured,
-      };
-    });
+
+    const [statusGroups, visibilityGroups, featured] = await Promise.all([
+      prisma.post.groupBy({
+        by: ["status"],
+        where: baseWhere,
+        _count: { _all: true },
+      }),
+      prisma.post.groupBy({
+        by: ["visibility"],
+        where: baseWhere,
+        _count: { _all: true },
+      }),
+      prisma.post.count({ where: { ...baseWhere, isFeatured: true } }),
+    ]);
+
+    const statusMap = Object.fromEntries(
+      statusGroups.map((s) => [s.status, s._count._all]),
+    );
+    const visibilityMap = Object.fromEntries(
+      visibilityGroups.map((v) => [v.visibility, v._count._all]),
+    );
+    const total = statusGroups.reduce((sum, g) => sum + g._count._all, 0);
+
+    return {
+      total,
+      byStatus: {
+        published: statusMap[TPostStatus.PUBLISHED] ?? 0,
+        draft: statusMap[TPostStatus.DRAFT] ?? 0,
+        scheduled: statusMap[TPostStatus.SCHEDULED] ?? 0,
+        archived: statusMap[TPostStatus.ARCHIVED] ?? 0,
+      },
+      byVisibility: {
+        public: visibilityMap[TPostVisibility.PUBLIC] ?? 0,
+        premium: visibilityMap[TPostVisibility.PREMIUM] ?? 0,
+      },
+      featured,
+    };
   }
 }
 

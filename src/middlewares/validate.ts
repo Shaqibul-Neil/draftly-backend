@@ -24,7 +24,13 @@ export const validateRequest = <T extends ZodType>(schema: T) => {
       })) as TRequestSchemaOutput;
 
       if (parsed.body !== undefined) req.body = parsed.body;
-      if (parsed.query !== undefined) req.query = parsed.query;
+      if (parsed.query !== undefined)
+        Object.defineProperty(req, "query", {
+          value: parsed.query,
+          writable: true,
+          configurable: true,
+          enumerable: true,
+        });
       if (parsed.params !== undefined) req.params = parsed.params;
       if (parsed.cookies !== undefined) req.cookies = parsed.cookies;
 
