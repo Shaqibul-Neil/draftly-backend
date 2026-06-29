@@ -60,8 +60,19 @@ class PostController {
   //Get My Posts
   getMyPosts = asyncHandler(async (req: TRequest, res: TResponse) => {
     const userId = req.user.id as string;
+    const params: IGetPostsParams = {
+      page: req.query.page as number | undefined,
+      limit: req.query.limit as number | undefined,
+      search: req.query.search as string | undefined,
+      status: req.query.status as TPostStatus | undefined,
+      visibility: req.query.visibility as TPostVisibility | undefined,
+      sortBy: req.query.sortBy as TPostSortField | undefined,
+      sortOrder: req.query.sortOrder as "asc" | "desc" | undefined,
+      startDate: req.query.startDate as Date | undefined,
+      endDate: req.query.endDate as Date | undefined,
+    };
 
-    const posts = await this.postService.getMyPosts(userId);
+    const posts = await this.postService.getMyPosts(userId, params);
     sendResponse({
       res,
       status: httpStatus.OK,

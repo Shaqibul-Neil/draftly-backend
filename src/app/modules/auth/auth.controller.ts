@@ -54,9 +54,8 @@ class AuthController {
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken)
       throw new AppError(
-        "Unauthorized",
+        "Unauthorized - Refresh token is missing from your request cookies.",
         httpStatus.UNAUTHORIZED,
-        "Refresh token is missing from your request cookies.",
       );
 
     const { accessToken, refreshToken: newRefreshToken } =

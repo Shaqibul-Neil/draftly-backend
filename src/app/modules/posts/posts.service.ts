@@ -16,6 +16,7 @@ import { POST_DETAILS_INCLUDE, POST_LIST_INCLUDE } from "./posts.constants";
 import { mapPost, mapPostDetail } from "./posts.mapper";
 import {
   buildCategoryRelations,
+  buildPostQueryArgs,
   buildTagRelations,
   ensurePostOwner,
   prepareCreatePostMeta,
@@ -75,65 +76,14 @@ export class PostService {
   //Get All Post
   //------------------------------------------
   async getPosts(params: IGetPostsParams): Promise<IGetPostsResponse> {
-    const where: Prisma.PostWhereInput = {};
-
-    if (params.search) {
-      where.OR = [
-        {
-          title: {
-            contains: params.search,
-            mode: "insensitive",
-          },
-        },
-        {
-          content: {
-            contains: params.search,
-            mode: "insensitive",
-          },
-        },
-      ];
-    }
-
-    if (params.status) {
-      where.status = params.status;
-    }
-
-    if (params.visibility) {
-      where.visibility = params.visibility;
-    }
-
-    if (params.startDate || params.endDate) {
-      where.createdAt = {
-        ...(params.startDate && { gte: params.startDate }),
-        ...(params.endDate && { lte: params.endDate }),
-      };
-    }
-
-    const page = params.page ?? 1;
-    const limit = params.limit ?? 10;
-
-    const sortOrder = params.sortOrder ?? "desc";
-
-    const SORT_MAP: Record<
-      TPostSortField,
-      Prisma.PostOrderByWithRelationInput
-    > = {
-      totalViews: { totalViews: sortOrder },
-      totalComments: { comments: { _count: sortOrder } },
-      totalLikes: { postLike: { _count: sortOrder } },
-      totalShares: { totalShares: sortOrder },
-      totalReadingTimeMinutes: { totalReadingTimeMinutes: sortOrder },
-    };
-
-    const orderBy: Prisma.PostOrderByWithRelationInput = params.sortBy
-      ? SORT_MAP[params.sortBy]
-      : { createdAt: sortOrder };
+    const { where, orderBy, skip, take, page, limit } =
+      buildPostQueryArgs(params);
 
     const [posts, total] = await Promise.all([
       prisma.post.findMany({
         where,
-        skip: (page - 1) * limit,
-        take: limit,
+        skip,
+        take,
         orderBy,
         include: POST_LIST_INCLUDE,
       }),
@@ -155,14 +105,31 @@ export class PostService {
   //------------------------------------------
   //Get My Posts
   //------------------------------------------
-  async getMyPosts(userId: string): Promise<IPostResponse[]> {
-    const posts = await prisma.post.findMany({
-      where: { authorId: userId },
-      orderBy: { createdAt: "desc" },
-      include: POST_LIST_INCLUDE,
-    });
+  async getMyPosts(
+    userId: string,
+    params: IGetPostsParams,
+  ): Promise<IGetPostsResponse> {
+    const { where, orderBy, skip, take, page, limit } = buildPostQueryArgs(
+      params,
+      {
+        authorId: userId,
+      },
+    );
+    const [posts, total] = await Promise.all([
+      prisma.post.findMany({
+        where,
+        skip,
+        take,
+        orderBy,
+        include: POST_LIST_INCLUDE,
+      }),
+      prisma.post.count({ where }),
+    ]);
 
-    return posts.map((post) => mapPost(post));
+    return {
+      data: posts.map(mapPost),
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    };
   }
 
   //------------------------------------------

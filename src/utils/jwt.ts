@@ -16,23 +16,20 @@ const verifyToken = (token: string, type: "access" | "refresh") => {
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
       throw new AppError(
-        "Unauthorized",
+        "Unauthorized - Your access token has expired. Please refresh your session.",
         httpStatus.UNAUTHORIZED,
-        "Your access token has expired. Please refresh your session.",
       );
     }
     if (error instanceof jwt.JsonWebTokenError) {
       throw new AppError(
-        "Unauthorized",
+        "Unauthorized - The provided token is malformed, corrupted, or invalid.",
         httpStatus.UNAUTHORIZED,
-        "The provided token is malformed, corrupted, or invalid.",
       );
     }
 
     throw new AppError(
-      "Unauthorized",
+      "Unauthorized - Authentication failed due to an invalid token.",
       httpStatus.UNAUTHORIZED,
-      "Authentication failed due to an invalid token.",
     );
   }
 };

@@ -1,11 +1,13 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import httpStatus from "http-status";
 import type { TApplication, TRequest, TResponse } from "./types/express.types";
 import router, { mountedPaths } from "./app/routes";
 import { globalErrorHandler } from "./middlewares/globalErrorHandler";
 import config from "./config";
 import { sendResponse } from "./utils/sendResponse";
+import { notFound } from "./middlewares/notFound";
 
 const app: TApplication = express();
 
@@ -37,7 +39,7 @@ app.use("/api", router);
 app.get("/", (req: TRequest, res: TResponse) => {
   sendResponse({
     res,
-    status: 200,
+    status: httpStatus.OK,
     success: true,
     message: "Welcome to Draftly Server",
     data: { endpoints: mountedPaths },
@@ -45,15 +47,7 @@ app.get("/", (req: TRequest, res: TResponse) => {
 });
 
 // Not Found Route
-app.use((req: TRequest, res: TResponse) => {
-  sendResponse({
-    res,
-    status: 404,
-    success: false,
-    message: "API endpoint not found",
-    data: { endpoints: mountedPaths },
-  });
-});
+app.use(notFound);
 
 // Global Error Handler
 app.use(globalErrorHandler);

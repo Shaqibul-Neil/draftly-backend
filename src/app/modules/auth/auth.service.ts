@@ -33,16 +33,14 @@ export class AuthService {
     if (isUserExist) {
       if (isUserExist.email === normalizedEmail) {
         throw new AppError(
-          "Registration Failed",
+          "Registration Failed - An account with this email already exists.",
           httpStatus.BAD_REQUEST,
-          "An account with this email already exists.",
         );
       }
       if (isUserExist.userName === normalizedUserName) {
         throw new AppError(
-          "Registration Failed",
+          "Registration Failed - This username is already taken.",
           httpStatus.BAD_REQUEST,
-          "This username is already taken.",
         );
       }
     }
@@ -101,19 +99,17 @@ export class AuthService {
 
     if (!user) {
       throw new AppError(
-        "Login Failed",
+        "Login Failed - Invalid credentials.",
         httpStatus.UNAUTHORIZED,
-        "Invalid credentials.",
       );
     }
 
     if (user.status !== TStatus.ACTIVE) {
       throw new AppError(
-        "Login Failed",
-        httpStatus.FORBIDDEN,
         user.status === TStatus.SUSPENDED
-          ? "Your account has been suspended."
-          : "Your account is not active.",
+          ? "Login Failed - Your account has been suspended."
+          : "Login Failed - Your account is not active.",
+        httpStatus.FORBIDDEN,
       );
     }
 
@@ -121,9 +117,8 @@ export class AuthService {
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     if (!isPasswordValid) {
       throw new AppError(
-        "Login Failed",
+        "Login Failed - Password is incorrect.",
         httpStatus.UNAUTHORIZED,
-        "Password is incorrect.",
       );
     }
 
@@ -164,18 +159,12 @@ export class AuthService {
       },
     });
 
-    if (!user)
-      throw new AppError(
-        "User not found",
-        httpStatus.NOT_FOUND,
-        "The requested user record does not exist in the system.",
-      );
+    if (!user) throw new AppError("User not found", httpStatus.NOT_FOUND);
 
     if (user.status !== TStatus.ACTIVE)
       throw new AppError(
-        "Login Failed",
+        "Login Failed - The requested user is suspended.",
         httpStatus.FORBIDDEN,
-        "The requested user is suspended.",
       );
 
     const jwtPayload = jwtToken.createJwtPayload(user);

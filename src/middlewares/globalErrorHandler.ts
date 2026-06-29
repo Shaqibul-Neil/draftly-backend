@@ -14,80 +14,73 @@ export const globalErrorHandler = (
   res: TResponse,
   next: TNextFunction,
 ) => {
-  let statusCode = 500;
-  let message = "Something went wrong";
-  let errorSources: { path: string; message: string }[] = [];
+  let statusCode: number = httpStatus.INTERNAL_SERVER_ERROR;
+  let message: string | string[] = "Something went wrong";
 
-  // Handling Zod Errors
   if (err instanceof ZodError) {
     statusCode = httpStatus.BAD_REQUEST;
-    message = "Validation Error";
-
-    errorSources = err.issues.map((issue) => ({
-      path: String(issue.path.join(".")),
-      message: issue.message,
-    }));
-  }
-  // Prisma Known Request Errors
-  else if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    message = err.issues.map((issue) => issue.message).join(" ");
+  } else if (err instanceof Prisma.PrismaClientKnownRequestError) {
     switch (err.code) {
+      case "P2000":
+        statusCode = httpStatus.BAD_REQUEST;
+        message = `Value too long for column: ${(err.meta?.column_name as string) ?? "unknown"}`;
+        break;
+      case "P2001":
+      case "P2015":
       case "P2025":
-        // Record not found — update/delete/findUniqueOrThrow on non-existent row
         statusCode = httpStatus.NOT_FOUND;
-        message = "Resource Not Found";
-        errorSources = [
-          {
-            path: "",
-            message:
-              (err.meta?.cause as string) ??
-              "The requested record does not exist.",
-          },
-        ];
+        message = (err.meta?.cause as string) ?? "Record not found";
         break;
       case "P2002":
-        // Unique constraint violation — duplicate slug, email, etc.
         statusCode = httpStatus.CONFLICT;
-        message = "Duplicate Entry";
-        errorSources = [
-          {
-            path: String((err.meta?.target as string[])?.join(", ") ?? ""),
-            message: `A record with this ${(err.meta?.target as string[])?.join(", ")} already exists.`,
-          },
-        ];
+        message = `${(err.meta?.target as string[])?.join(", ")} already exists`;
+        break;
+      case "P2003":
+        statusCode = httpStatus.BAD_REQUEST;
+        message = `Invalid reference: ${(err.meta?.field_name as string) ?? "related record does not exist"}`;
+        break;
+      case "P2004":
+        statusCode = httpStatus.BAD_REQUEST;
+        message = `Database constraint failed: ${(err.meta?.database_error as string) ?? err.message}`;
+        break;
+      case "P2011":
+        statusCode = httpStatus.BAD_REQUEST;
+        message = `Required field missing: ${(err.meta?.constraint as string) ?? "unknown"}`;
+        break;
+      case "P2014":
+        statusCode = httpStatus.BAD_REQUEST;
+        message = `Relation violation: ${(err.meta?.relation_name as string) ?? "required relation missing"}`;
+        break;
+      case "P2034":
+        statusCode = httpStatus.CONFLICT;
+        message = "Transaction conflict or deadlock. Please retry.";
         break;
       default:
         statusCode = httpStatus.INTERNAL_SERVER_ERROR;
-        message = "Database Error";
-        errorSources = [
-          { path: "", message: `Prisma error code: ${err.code}` },
-        ];
+        message = `Database error (${err.code})`;
     }
-  }
-  // Custom App Error
-  else if (err instanceof AppError) {
+  } else if (err instanceof Prisma.PrismaClientValidationError) {
+    statusCode = httpStatus.BAD_REQUEST;
+    message = "Invalid query structure. Check field names and types.";
+  } else if (err instanceof Prisma.PrismaClientInitializationError) {
+    statusCode = httpStatus.SERVICE_UNAVAILABLE;
+    message = "Database connection failed. Please try again later.";
+  } else if (err instanceof Prisma.PrismaClientUnknownRequestError) {
+    statusCode = httpStatus.INTERNAL_SERVER_ERROR;
+    message = "An unknown database error occurred.";
+  } else if (err instanceof AppError) {
     statusCode = err.statusCode;
     message = err.message;
-    errorSources = [
-      {
-        path: "",
-        message: err.details || err.message,
-      },
-    ];
-  }
-  // Generic Error
-  else if (err instanceof Error) {
+  } else if (err instanceof Error) {
     message = err.message;
-    errorSources = [
-      {
-        path: "",
-        message: err.message,
-      },
-    ];
   }
 
   return res.status(statusCode).json({
-    success: false,
-    message: message,
-    errors: errorSources,
+    statusCode,
+    message,
+    error: httpStatus[statusCode as keyof typeof httpStatus] ?? "Error",
+    timestamp: new Date().toISOString(),
+    path: req.originalUrl,
   });
 };
