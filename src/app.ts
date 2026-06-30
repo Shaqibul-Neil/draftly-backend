@@ -8,6 +8,7 @@ import { globalErrorHandler } from "./middlewares/globalErrorHandler";
 import config from "./config";
 import { sendResponse } from "./utils/sendResponse";
 import { notFound } from "./middlewares/notFound";
+import { stripeWebhookHandler } from "./app/modules/subscription/subscription.webhook";
 
 const app: TApplication = express();
 
@@ -21,6 +22,13 @@ app.use(
     methods: ["GET", "PUT", "POST", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
+);
+
+//webhook
+app.post(
+  "/api/v1/subscription/webhook/stripe",
+  express.raw({ type: "application/json" }),
+  stripeWebhookHandler,
 );
 
 app.use(express.json());
