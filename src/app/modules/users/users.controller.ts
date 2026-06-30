@@ -2,10 +2,12 @@ import httpStatus from "http-status";
 import type { TRequest, TResponse } from "../../../types/express.types";
 import { asyncHandler } from "../../../utils/asyncHandler";
 import { sendResponse } from "../../../utils/sendResponse";
-import { userService } from "./users.service";
+import { userService, type UserService } from "./users.service";
 import type { TUpdateProfilePayload } from "./users.validation";
 
 class UserController {
+  constructor(private userService: UserService) {}
+
   getMyProfile = asyncHandler(async (req: TRequest, res: TResponse) => {
     sendResponse({
       res,
@@ -17,7 +19,9 @@ class UserController {
   });
 
   getFullProfile = asyncHandler(async (req: TRequest, res: TResponse) => {
-    const profile = await userService.getFullProfile(req.user.id as string);
+    const profile = await this.userService.getFullProfile(
+      req.user.id as string,
+    );
     sendResponse({
       res,
       status: httpStatus.OK,
@@ -30,7 +34,10 @@ class UserController {
   updateMyProfile = asyncHandler(async (req: TRequest, res: TResponse) => {
     const userId = req.user.id as string;
     const payload = req.body as TUpdateProfilePayload;
-    const updatedProfile = await userService.updateProfile(userId, payload);
+    const updatedProfile = await this.userService.updateProfile(
+      userId,
+      payload,
+    );
     sendResponse({
       res,
       status: httpStatus.OK,
@@ -41,4 +48,4 @@ class UserController {
   });
 }
 
-export const userController = new UserController();
+export const userController = new UserController(userService);

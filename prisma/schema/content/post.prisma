@@ -5,6 +5,7 @@ model Post {
   slug                    String          @unique @db.VarChar(255)
   content                 String          @db.Text
   isFeatured              Boolean         @default(false) @map("is_featured")
+  isPremium               Boolean         @default(false) @map("is_premium")
   status                  TPostStatus     @default(PUBLISHED)
   visibility              TPostVisibility @default(PUBLIC)
   thumbnailMediaId        String?         @map("thumbnail_media_id") @db.Uuid

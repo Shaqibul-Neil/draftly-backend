@@ -26,3 +26,9 @@ enum TCommentStatus {
   HIDDEN
   FLAGGED
 }
+
+enum TSubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+}

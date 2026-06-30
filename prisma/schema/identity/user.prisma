@@ -12,6 +12,7 @@ model User {
 
   // 🔗 Relations
   profile      Profile?
+  subscription Subscription?
   posts        Post[]
   comments     Comment[]
   postLikes    PostLike[]

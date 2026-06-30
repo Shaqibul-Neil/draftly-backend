@@ -8,10 +8,12 @@ dotenv.config({ path: path.join(process.cwd(), ".env") });
 const config = {
   url: env.BASE_URL as string,
   local_url: env.LOCAL_URL as string,
+  app_url: env.APP_URL as string,
   port: env.PORT as string,
   database_url: env.DATABASE_URL as string,
   node_env: env.NODE_ENV as string,
   bcrypt_salt_rounds: Number(env.BCRYPT_SALT_ROUNDS ?? 10),
+
   jwt: {
     access: {
       secret: env.JWT_ACCESS_TOKEN_SECRET as string,
@@ -22,8 +24,12 @@ const config = {
       expires_in: (env.JWT_REFRESH_EXPIRY as string) ?? "7d",
     },
   },
+
   login_rl_window_ms: Number(env.LOGIN_RL_WINDOW_MS ?? 15 * 60 * 1000),
   login_rl_max: Number(env.LOGIN_RL_MAX ?? 5),
+
+  stripe_secret_key: env.STRIPE_SECRET_KEY as string,
+  stripe_price_id: env.STRIPE_PRICE_ID as string,
 };
 
 export default config;
